@@ -1,10 +1,212 @@
 [
     {
+        "id": "7b959d30ab78f2cd",
+        "type": "tab",
+        "label": "LoraWAN - Barn Solar Controller",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3ac3f891e46915aa",
+        "type": "mqtt in",
+        "z": "7b959d30ab78f2cd",
+        "name": "LoraWAN - Barn Solar Controller",
+        "topic": "application/fccc9511-e77b-4b0e-9a50-aee856dcae5d/device/a84041af795a05f1/event/up",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "334258495d7b2dc9",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 150,
+        "y": 320,
+        "wires": [
+            [
+                "5e0fcaa5d5fa93ff"
+            ]
+        ]
+    },
+    {
+        "id": "5e0fcaa5d5fa93ff",
+        "type": "function",
+        "z": "7b959d30ab78f2cd",
+        "name": "Convert to HEX",
+        "func": "// Ensure msg.payload is a string before parsing\nlet payloadStr = (typeof msg.payload === 'string') ? msg.payload : JSON.stringify(msg.payload);\n\n// Parse the incoming JSON payload\nlet jsonData = JSON.parse(payloadStr);\n\n// Extract and decode the Base64 \"data\" field\nlet base64Data = jsonData.data;\nlet buffer = Buffer.from(base64Data, 'base64');\n\n// Set payload to Buffer (not HEX)\nmsg.payload = buffer; \n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 320,
+        "wires": [
+            [
+                "796cdf606e5c3411"
+            ]
+        ]
+    },
+    {
+        "id": "b304e1b964e4fa5a",
+        "type": "debug",
+        "z": "7b959d30ab78f2cd",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "796cdf606e5c3411",
+        "type": "function",
+        "z": "7b959d30ab78f2cd",
+        "name": "Parse",
+        "func": "// Ensure payload is a Buffer, HEX string, or Array, then convert it\nif (typeof msg.payload === \"string\") {\n    msg.payload = Buffer.from(msg.payload, \"hex\");\n} else if (Buffer.isBuffer(msg.payload)) {\n    msg.payload = [...msg.payload]; // Convert Buffer to Array\n} else if (!Array.isArray(msg.payload)) {\n    node.error(\"Unsupported payload format\", msg);\n    return null;\n}\n\n// Ensure the payload has at least 3 bytes of Dragino metadata\nif (msg.payload.length < 3) {\n    node.error(\"Payload too short to contain valid MODBUS data\", msg);\n    return null;\n}\n\n// Extract MODBUS data starting from the 7th character (byte index 3)\nlet modbusData = msg.payload.slice(3);\n\n// Function to extract 16-bit values (Big Endian)\nfunction readUint16BE(offset, scale) {\n    if (offset + 1 >= modbusData.length) return null; // Prevent out-of-bounds read\n    let rawValue = (modbusData[offset] << 8) | modbusData[offset + 1]; // Big Endian\n    return rawValue * scale;\n}\n\n// Create individual messages for each output\nlet outputs = [\n    { topic: \"Battery Capacity\", payload: readUint16BE(0, 1) },\n    { topic: \"Battery Voltage\", payload: readUint16BE(2, 0.1) },\n    { topic: \"Battery Charge Current\", payload: readUint16BE(4, 0.01) },\n    { topic: \"Load Voltage\", payload: readUint16BE(6, 0.1) },\n    { topic: \"Load Current\", payload: readUint16BE(8, 0.01) },\n    { topic: \"Load Power\", payload: readUint16BE(10, 1) },\n    { topic: \"Solar Panel Voltage\", payload: readUint16BE(12, 0.1) },\n    { topic: \"Solar Panel Current\", payload: readUint16BE(14, 0.01) },\n    { topic: \"Solar Panel PV Power\", payload: readUint16BE(16, 1) }\n];\n\n// Filter out null values (in case some data is missing)\noutputs = outputs.map(msg => (msg.payload !== null ? msg : null));\n\n// Send each value to its corresponding output\nnode.send(outputs);\nreturn;\n",
+        "outputs": 9,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 380,
+        "wires": [
+            [
+                "b304e1b964e4fa5a",
+                "057a3e89fa93c26d"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "1c6b9eb95c976d30"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "cf57c315481f883b"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "e8345120557d7e0d"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "06e9a3cc0464df17"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "2a16f460d41d08e0"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "6b8300d4facc0b5c"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "d0b77397bf34d967"
+            ],
+            [
+                "b304e1b964e4fa5a",
+                "a9cb73df7dda4752"
+            ]
+        ],
+        "outputLabels": [
+            "Battery Capacity",
+            "Battery Voltage",
+            "Battery Charge Current",
+            "Load Voltage",
+            "Load Current",
+            "Load Power",
+            "Solar Panel Voltage",
+            "Solar Panel Current",
+            "Solar Panel Power"
+        ]
+    },
+    {
+        "id": "057a3e89fa93c26d",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Battery Capacity",
+        "entityConfig": "200af7dab6b2588e",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 940,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1c6b9eb95c976d30",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Battery Voltage",
+        "entityConfig": "d47f1c782271e43c",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 940,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cf57c315481f883b",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Battery Charge Current",
+        "entityConfig": "80df06a372cf9dbe",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 960,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e8345120557d7e0d",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Battery Load Voltage",
+        "entityConfig": "0fba15c6ca734350",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "06e9a3cc0464df17",
         "type": "ha-sensor",
         "z": "7b959d30ab78f2cd",
         "name": "Barn Battery Load Current",
-        "entityConfig": "279501e6a77a768e",
+        "entityConfig": "a7355edfcfa6a88d",
         "version": 0,
         "state": "payload",
         "stateType": "msg",
@@ -18,7 +220,274 @@
         ]
     },
     {
-        "id": "279501e6a77a768e",
+        "id": "2a16f460d41d08e0",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Battery Load Power",
+        "entityConfig": "1c76a63ab0eea671",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6b8300d4facc0b5c",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Solar Panel Voltage",
+        "entityConfig": "afd80357c1cdb973",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d0b77397bf34d967",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Solar Panel Current",
+        "entityConfig": "6c04d070d3f3c125",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a9cb73df7dda4752",
+        "type": "ha-sensor",
+        "z": "7b959d30ab78f2cd",
+        "name": "Barn Solar Panel Power",
+        "entityConfig": "a7e9ae9ff57f9b14",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 820,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "334258495d7b2dc9",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "200af7dab6b2588e",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Capacity",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Capacity"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "battery"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "%"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "d47f1c782271e43c",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Voltage",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Voltage"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "voltage"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "V"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "80df06a372cf9dbe",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Charge Current",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Charge Current"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "current"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "A"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "0fba15c6ca734350",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Load Voltage",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Load Voltage"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "voltage"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "V"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "a7355edfcfa6a88d",
         "type": "ha-entity-config",
         "server": "ad58e114.07b7f",
         "deviceConfig": "",
@@ -52,7 +521,171 @@
             },
             {
                 "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "1c76a63ab0eea671",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Load Power",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Load Power"
+            },
+            {
+                "property": "icon",
                 "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "power"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "W"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "afd80357c1cdb973",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Solar Panel Voltage",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Solar Panel Voltage"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "voltage"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "V"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "6c04d070d3f3c125",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Solar Panel Current",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Solar Panel Current"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "current"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "A"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "a7e9ae9ff57f9b14",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Solar Panel Power",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": ""
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "power"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "W"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
             }
         ],
         "resend": false,
