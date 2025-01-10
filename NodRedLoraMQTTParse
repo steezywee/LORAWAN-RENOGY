@@ -1,155 +1,67 @@
 [
     {
-        "id": "7b959d30ab78f2cd",
-        "type": "tab",
-        "label": "LoraWAN - Barn Solar Controller",
-        "disabled": false,
-        "info": "",
-        "env": []
-    },
-    {
-        "id": "3ac3f891e46915aa",
-        "type": "mqtt in",
+        "id": "06e9a3cc0464df17",
+        "type": "ha-sensor",
         "z": "7b959d30ab78f2cd",
-        "name": "LoraWAN - Barn Solar Controller",
-        "topic": "application/fccc9511-e77b-4b0e-9a50-aee856dcae5d/device/a84041af795a05f1/event/up",
-        "qos": "2",
-        "datatype": "auto-detect",
-        "broker": "334258495d7b2dc9",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 150,
-        "y": 320,
+        "name": "Barn Battery Load Current",
+        "entityConfig": "279501e6a77a768e",
+        "version": 0,
+        "state": "payload",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 950,
+        "y": 580,
         "wires": [
-            [
-                "5e0fcaa5d5fa93ff"
-            ]
+            []
         ]
     },
     {
-        "id": "5e0fcaa5d5fa93ff",
-        "type": "function",
-        "z": "7b959d30ab78f2cd",
-        "name": "Convert to HEX",
-        "func": "// Ensure msg.payload is a string before parsing\nlet payloadStr = (typeof msg.payload === 'string') ? msg.payload : JSON.stringify(msg.payload);\n\n// Parse the incoming JSON payload\nlet jsonData = JSON.parse(payloadStr);\n\n// Extract and decode the Base64 \"data\" field\nlet base64Data = jsonData.data;\nlet buffer = Buffer.from(base64Data, 'base64');\n\n// Set payload to Buffer (not HEX)\nmsg.payload = buffer; \n\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 400,
-        "y": 320,
-        "wires": [
-            [
-                "796cdf606e5c3411",
-                "b304e1b964e4fa5a"
-            ]
-        ]
-    },
-    {
-        "id": "b304e1b964e4fa5a",
-        "type": "debug",
-        "z": "7b959d30ab78f2cd",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 860,
-        "y": 220,
-        "wires": []
-    },
-    {
-        "id": "796cdf606e5c3411",
-        "type": "function",
-        "z": "7b959d30ab78f2cd",
-        "name": "Parse",
-        "func": "// Ensure payload is a Buffer, HEX string, or Array, then convert it\nif (typeof msg.payload === \"string\") {\n    msg.payload = Buffer.from(msg.payload, \"hex\");\n} else if (Buffer.isBuffer(msg.payload)) {\n    msg.payload = [...msg.payload]; // Convert Buffer to Array\n} else if (!Array.isArray(msg.payload)) {\n    node.error(\"Unsupported payload format\", msg);\n    return null;\n}\n\n// Ensure the payload has at least 3 bytes of Dragino metadata\nif (msg.payload.length < 3) {\n    node.error(\"Payload too short to contain valid MODBUS data\", msg);\n    return null;\n}\n\n// Extract MODBUS data starting from the 7th character (byte index 3)\nlet modbusData = msg.payload.slice(3);\n\n// Function to extract 16-bit values (Big Endian)\nfunction readUint16BE(offset, scale) {\n    if (offset + 1 >= modbusData.length) return null; // Prevent out-of-bounds read\n    let rawValue = (modbusData[offset] << 8) | modbusData[offset + 1]; // Big Endian\n    return rawValue * scale;\n}\n\n// Decode MODBUS values\nlet decodedValues = {};\nif (modbusData.length >= 2) decodedValues[\"Battery Capacity\"] = readUint16BE(0, 1);        // 0x100 - Percentage\nif (modbusData.length >= 4) decodedValues[\"Battery Voltage\"] = readUint16BE(2, 0.1);       // 0x101 - Volts\nif (modbusData.length >= 6) decodedValues[\"Battery Charge Current\"] = readUint16BE(4, 0.01); // 0x102 - Amps\nif (modbusData.length >= 8) decodedValues[\"Load Voltage\"] = readUint16BE(6, 0.1);          // 0x104 - Volts\nif (modbusData.length >= 10) decodedValues[\"Load Current\"] = readUint16BE(8, 0.01);        // 0x105 - Amps\nif (modbusData.length >= 12) decodedValues[\"Load Power\"] = readUint16BE(10, 1);            // 0x106 - Watts\nif (modbusData.length >= 14) decodedValues[\"Solar Panel Voltage\"] = readUint16BE(12, 0.1); // 0x107 - Volts\nif (modbusData.length >= 16) decodedValues[\"Solar Panel Current\"] = readUint16BE(14, 0.01);// 0x108 - Amps\nif (modbusData.length >= 18) decodedValues[\"Solar Panel PV Power\"] = readUint16BE(16, 1);  // 0x109 - Watts\n\n// Assign decoded values to msg.payload\nmsg.payload = decodedValues;\nreturn msg;\n",
-        "outputs": 9,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 590,
-        "y": 380,
-        "wires": [
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ],
-            [
-                "b304e1b964e4fa5a"
-            ]
+        "id": "279501e6a77a768e",
+        "type": "ha-entity-config",
+        "server": "ad58e114.07b7f",
+        "deviceConfig": "",
+        "name": "Barn Battery Load Current",
+        "version": 6,
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "Barn Battery Load Current"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "current"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "A"
+            },
+            {
+                "property": "state_class",
+                "value": ""
+            }
         ],
-        "outputLabels": [
-            "Battery Capacity",
-            "Battery Voltage",
-            "Battery Charge Current",
-            "Load Voltage",
-            "Load Current",
-            "Load Power",
-            "Solar Panel Voltage",
-            "Solar Panel Current",
-            "Solar Panel Power"
-        ]
+        "resend": false,
+        "debugEnabled": false
     },
     {
-        "id": "334258495d7b2dc9",
-        "type": "mqtt-broker",
-        "name": "",
-        "broker": "localhost",
-        "port": "1883",
-        "clientid": "",
-        "autoConnect": true,
-        "usetls": false,
-        "protocolVersion": "4",
-        "keepalive": "60",
-        "cleansession": true,
-        "autoUnsubscribe": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthRetain": "false",
-        "birthPayload": "",
-        "birthMsg": {},
-        "closeTopic": "",
-        "closeQos": "0",
-        "closeRetain": "false",
-        "closePayload": "",
-        "closeMsg": {},
-        "willTopic": "",
-        "willQos": "0",
-        "willRetain": "false",
-        "willPayload": "",
-        "willMsg": {},
-        "userProps": "",
-        "sessionExpiry": ""
+        "id": "ad58e114.07b7f",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true
     }
 ]
