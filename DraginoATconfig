@@ -1,0 +1,81 @@
+recv:
+recv:
+Stop Tx events,Please wait for all configurations to print
+recv:
+recv:AT+DEUI=a8 40 41 af 79 5a 05 f1
+recv:AT+APPEUI=a8 40 41 00 00 00 01 01
+recv:AT+APPKEY=06 73 ac 14 b9 b9 f8 9a a0 e6 82 47 71 9e 12 59
+recv:AT+DADDR=005A05F1
+recv:
+AT+NWKSKEY=a1 b8 d0 ac 20 b3 75 ed c4 6a 0a 2c 91 70 37 2d
+recv:AT+APPSKEY=a2 a5 56 71 17 cd 43 da 43 36 9e bb 97 8e 51 6e
+recv:AT+ADR=0
+recv:AT+TXP=0
+recv:AT+DR=4
+recv:AT+DCS=0
+recv:AT+PNM=1
+recv:AT+RX2FQ=923300000
+recv:AT+RX2DR=8
+recv:AT+RX1DL=3000
+recv:AT+RX2DL=4000
+recv:AT+JN1DL=5000
+recv:AT+JN2DL=6000
+recv:AT+NJM=1
+recv:AT+NWKID=00 00 00 00
+recv:AT+FCU=181
+recv:AT+FCD=0
+recv:AT+CLASS=C
+recv:AT+NJS=1
+recv:AT+RECVB=0:
+recv:AT+RECV=0:
+recv:AT+VER=v1.4.2 US915
+recv:
+AT+CFM=0,7,0
+recv:AT+CFS=0
+recv:AT+SNR=0
+recv:AT+RSSI=0
+recv:AT+RJTDC=20
+recv:AT+RPL=0
+recv:AT+TDC=600000
+recv:AT+PORT=2
+recv:AT+RX1WTO=83
+recv:AT+RX2WTO=7
+recv:AT+DECRYPT=0
+recv:AT+INTMOD=2
+recv:AT+PWORD=123456
+recv:AT+MBFUN=1
+recv:AT+BAUDR=9600
+recv:AT+PARITY=0
+recv:AT+DATABIT=8
+recv:AT+STOPBIT=0
+recv:AT+DATAUP=1
+recv:AT+PAYVER=1
+recv:AT+CHS=0
+recv:AT+CHE=0
+recv:Use default channel
+recv:AT+RXMODE=0,0
+recv:AT+COMMAND1=ff 03 01 00 00 23 10 31 ,0     AT+DATACUT1=75,2,4~5+6~7+8~9     AT+CMDDL1=5000   // Gets Battery Capacity, Battery Voltage, Battery Charge Current
+recv:AT+COMMAND2=ff 03 01 00 00 23 10 31 ,0     AT+DATACUT2=75,2,12~13+14~15+16~17     AT+CMDDL2=5000   // Gets Load Voltage, Load Current, Load Power
+recv:AT+COMMAND3=ff 03 01 00 00 23 10 31 ,0     AT+DATACUT3=75,2,18~19+20~21+22~23     AT+CMDDL3=5000   //  Gets Solar Panel Voltage, Solar Panel Current, Solar Panel Power
+recv:AT+COMMAND4=00 ,0     AT+DATACUT4=0,0,0     AT+CMDDL4=0
+recv:AT+COMMAND5=00 ,0     AT+DATACUT5=0,0,0     AT+CMDDL5=0
+recv:AT+COMMAND6=00 ,0     AT+DATACUT6=0,0,0     AT+CMDDL6=0
+recv:AT+COMMAND7=00 ,0     AT+DATACUT7=0,0,0     AT+CMDDL7=0
+recv:AT+COMMAND8=00 ,0     AT+DATACUT8=0,0,0     AT+CMDDL8=0
+recv:AT+COMMAND9=0,0     AT+DATACUT9=0,0,0     AT+CMDDL9=0
+recv:AT+COMMANDA=0,0     AT+DATACUTA=0,0,0     AT+CMDDLA=0
+recv:AT+COMMANDB=0,0     AT+DATACUTB=0,0,0     AT+CMDDLB=0
+recv:AT+COMMANDC=0,0     AT+DATACUTC=0,0,0     AT+CMDDLC=0
+recv:AT+COMMANDD=0,0     AT+DATACUTD=0,0,0     AT+CMDDLD=0
+recv:AT+COMMANDE=0,0     AT+DATACUTE=0,0,0     AT+CMDDLE=0
+recv:AT+COMMANDF=0,0     AT+DATACUTF=0,0,0     AT+CMDDLF=0
+recv:AT+NEWLINE=NULL
+recv:AT+DDETECT=1,1440,2880
+recv:AT+SETMAXNBTRANS=1,0
+recv:AT+DISFCNTCHECK=0
+recv:AT+DISMACANS=0
+recv:
+recv:
+Start Tx events
+recv:
+recv:OK
